@@ -15,7 +15,11 @@ from ..utils.http_client import do_async_request
 from ..utils.log import logError
 from ..export.dump import dumpContent
 from ..sites.instagram import get_instagram_account_info
-from ..ner.entity_extraction import extract_data_with_ai
+# Conditional import for AI features to avoid Python 3.14 compatibility issues
+try:
+    from ..ner.entity_extraction import extract_data_with_ai
+except ImportError:
+    extract_data_with_ai = None
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
@@ -67,7 +71,7 @@ async def checkSite(
                             )
                             extractedMetadata.extend(metadata)
 
-                        if config.ai and config.aiModel:
+                        if config.ai and config.aiModel and extract_data_with_ai:
                             metadata = extract_data_with_ai(
                                 config, site, response["content"], response["json"]
                             )

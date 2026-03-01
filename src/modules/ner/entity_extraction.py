@@ -1,4 +1,15 @@
-import spacy
+# Conditional import for spacy to handle Python 3.14 compatibility issues
+# Use importlib to prevent import errors from crashing the module
+import importlib
+SPACY_AVAILABLE = False
+spacy = None
+try:
+    spacy = importlib.import_module('spacy')
+    SPACY_AVAILABLE = True
+except (ImportError, Exception):
+    SPACY_AVAILABLE = False
+    spacy = None
+
 from bs4 import BeautifulSoup
 from bs4 import MarkupResemblesLocatorWarning
 import warnings
@@ -11,6 +22,10 @@ warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 
 def inialize_nlp_model(config):
+    if not SPACY_AVAILABLE:
+        config.console.print("❌ spacy is not available (Python 3.14 compatibility issue)")
+        config.console.print("AI features are disabled. Please use Python 3.9-3.13 for AI features.")
+        sys.exit()
     try:
         config.nlp = spacy.load("en_blackbird_osint_ner")
         config.console.print("✔️  Successfully loaded AI model (en_blackbird_osint_ner)")
@@ -54,6 +69,8 @@ def extract_json_string(json_content):
 
 
 def extract_data_with_ai(config, site, html_content=None, json_content=None):
+    if not SPACY_AVAILABLE or not config.nlp:
+        return []
     avatar_regex = r"(https?://[^\s]+(?:avatar|profile|user)[^\s]*(?:\.jpg|\.jpeg|\.png|\.gif|\.webp|\.svg|\.bmp))"
     extractedMetadata = []
     raw_data = []
